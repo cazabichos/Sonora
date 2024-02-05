@@ -2,6 +2,9 @@ package dao;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+
 import modelo.Disco;
 
 import java.util.ArrayList;
@@ -65,6 +68,32 @@ public class DiscoDAO {
         
         // Inserta el documento en la colección
         collection.insertOne(doc);
+    }
+    
+    public void actualizarDisco(Disco disco) {
+        Document filtro = new Document("nombreDisco", disco.getNombreDisco());
+        Document datosActualizados = new Document("$set", new Document()
+            .append("artista", disco.getArtista())
+            .append("precio", disco.getPrecio())
+            .append("ingresadoRetiradoPor", disco.getIngresadoRetiradoPor())
+            .append("genero", disco.getGenero())
+            // Añade el resto de campos según tu modelo
+        );
+        MongoCollection<Document> collection = database.getCollection("discos");
+        collection.updateOne(filtro, datosActualizados);
+    }
+
+    
+    public void retirarDisco(String nombreDisco, String nombreUsuario) {
+        MongoCollection<Document> collection = database.getCollection("discos");
+        // Asume que 'nombreDisco' es único; ajusta según sea necesario
+        Document found = collection.findOneAndDelete(new Document("nombreDisco", nombreDisco));
+        if (found != null) {
+            // Aquí podrías incluir lógica para registrar el retiro, usando 'nombreUsuario'
+            System.out.println("Disco retirado con éxito.");
+        } else {
+            System.out.println("Disco no encontrado.");
+        }
     }
 
     // Implementa aquí otros métodos CRUD

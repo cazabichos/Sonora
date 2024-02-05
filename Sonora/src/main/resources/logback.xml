@@ -6,6 +6,8 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+    
+    <logger name="org.mongodb.driver" level="ERROR"/>
 
     <!-- Configuración del nivel de registro (INFO, WARN, ERROR) -->
     <root level="OFF">
