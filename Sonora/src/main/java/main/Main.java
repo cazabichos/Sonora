@@ -1,8 +1,9 @@
 package main;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dao.DiscoDAO;
 import io.IO;
@@ -18,7 +19,8 @@ public class Main {
             IO.println("\nMenú Principal:");
             IO.println("1. Insertar nuevo disco");
             IO.println("2. Mostrar todos los discos");
-            IO.println("3. Salir");
+            IO.println("3. Buscar discos");
+            IO.println("4. Salir");
             IO.print("Seleccione una opción: ");
 
             int opcion = IO.readInt();
@@ -31,7 +33,11 @@ public class Main {
                     mostrarTodosLosDiscos(discoDAO);
                     seleccionarYMostrarMenuDisco(discoDAO);
                     break;
-                case 3: // Asumiendo que 3 es la opción para salir
+                case 3:
+                    // Lógica para buscar discos con filtros
+                    mostrarMenuBusqueda(discoDAO);
+                    break;
+                case 4: // Asumiendo que 3 es la opción para salir
                     IO.println("Programa finalizado con éxito, conexión a MongoDB cerrada.");
                     MongoDBUtil.close(); // Cierra la conexión a la base de datos antes de salir
                     return;
@@ -47,23 +53,47 @@ public class Main {
         if (discos.isEmpty()) {
             IO.println("No hay discos registrados en la base de datos.");
         } else {
-            int index = 1;
-            for (Disco disco : discos) {
-                IO.println(index + ". " + disco.getNombreDisco() + ", " + disco.getArtista() + ", Retirado/Ingresado por: " + disco.getIngresadoRetiradoPor() + ", " + obtenerCamposOpcionales(disco));
-                index++;
+            for (int index = 0; index < discos.size(); index++) {
+                Disco disco = discos.get(index);
+                String camposOpcionales = obtenerCamposOpcionales(disco);
+                String detalleDisco = (index + 1) + ". " + disco.getNombreDisco() + ", " + disco.getArtista() +
+                		", Precio: " + disco.getPrecio()+
+                		", Ingresado por: " + disco.getIngresadoRetiradoPor();
+
+                // Añadir campos opcionales a detalleDisco solo si existen
+                if (!camposOpcionales.isEmpty()) {
+                    detalleDisco += ", " + camposOpcionales;
+                }
+                
+                IO.println(detalleDisco);
             }
         }
     }
+
     
     private static String obtenerCamposOpcionales(Disco disco) {
-        // Este método construye una cadena con los campos opcionales no nulos
-        String campos = "";
-        if (disco.getGenero() != null) campos += "Género: " + disco.getGenero() + ", ";
-        // Repite para otros campos opcionales
+        StringBuilder campos = new StringBuilder();
+        if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
+            campos.append("Género: ").append(disco.getGenero()).append(", ");
+        }
+        if (disco.getFechaLanzamiento() != null) {
+            campos.append("Fecha de Lanzamiento: ").append(disco.getFechaLanzamiento().toString()).append(", ");
+        }
+        if (disco.getFormato() != null && !disco.getFormato().isEmpty()) {
+            campos.append("Formato: ").append(disco.getFormato()).append(", ");
+        }
+        if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
+            campos.append("Discográfica: ").append(disco.getDiscografica()).append(", ");
+        }
+
         // Elimina la última coma y espacio si hay campos
-        if (!campos.isEmpty()) campos = campos.substring(0, campos.length() - 2);
-        return campos;
+        if (campos.length() > 0) {
+            campos.setLength(campos.length() - 2);
+        }
+
+        return campos.toString();
     }
+
     
     private static void seleccionarYMostrarMenuDisco(DiscoDAO discoDAO) {
         IO.println("Seleccione el número del disco para más opciones o 0 para volver:");
@@ -79,20 +109,49 @@ public class Main {
             IO.println("Selección inválida.");
         }
     }
+    
+    private static void mostrarDetallesDisco(Disco disco) {
+        IO.println("Detalles Actualizados del Disco:");
+        IO.println("Nombre del Disco: " + disco.getNombreDisco());
+        IO.println("Artista: " + disco.getArtista());
+        IO.println("Precio: " + disco.getPrecio());
+        IO.println("Ingresado por: " + disco.getIngresadoRetiradoPor());
+        
+        // Mostrar campos opcionales si están disponibles
+        if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
+            IO.println("Género: " + disco.getGenero());
+        }
+        if (disco.getFechaLanzamiento() != null) {
+            IO.println("Fecha de Lanzamiento: " + disco.getFechaLanzamiento().toString());
+        }
+        if (disco.getFormato() != null && !disco.getFormato().isEmpty()) {
+            IO.println("Formato: " + disco.getFormato());
+        }
+        if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
+            IO.println("Discográfica: " + disco.getDiscografica());
+        }
+        // Agrega aquí más campos opcionales según cómo hayas definido tu clase Disco
+    }
+
+
 
 
     private static void mostrarMenuDisco(Disco disco, DiscoDAO discoDAO) {
-        IO.println("Has seleccionado: " + disco.getNombreDisco());
+    	IO.println("Has seleccionado: " + disco.getNombreDisco());
         IO.println("1. Editar disco");
         IO.println("2. Retirar disco");
-        IO.println("3. Volver al menú principal");
+        IO.println("3. Borrar un campo opcional");
+        IO.println("4. Volver al menú principal");
 
-        IO.print("Seleccione una opción: ");
         int opcion = IO.readInt();
 
         switch (opcion) {
             case 1:
-            	editarDisco(discoDAO, disco);
+                editarDisco(discoDAO, disco);
+                // Recuperar la versión actualizada del disco de la base de datos
+                
+                // Asumiendo que tienes un método para mostrar los detalles del disco
+                
                 break;
             case 2:
                 IO.print("Ingrese su nombre de usuario para confirmar el retiro: ");
@@ -100,8 +159,12 @@ public class Main {
                 discoDAO.retirarDisco(disco.getNombreDisco(), nombreUsuario);
                 break;
             case 3:
-                // Simplemente sale del método
-                break;
+            	 borrarCampoOpcional(disco, discoDAO);
+                 break;
+            case 4:
+                // No se necesita hacer nada aquí para volver al menú principal
+                // La función terminará, y el bucle while en main se reanudará mostrando el menú principal nuevamente
+                return;
             default:
                 IO.println("Opción no válida, intente de nuevo.");
                 break;
@@ -112,14 +175,11 @@ public class Main {
 
 
     private static void insertarDisco(DiscoDAO discoDAO) {
-        IO.println("Ingrese el nombre del disco:");
-        String nombreDisco = IO.readString();
-        IO.println("Ingrese el artista:");
-        String artista = IO.readString();
-        IO.println("Ingrese el precio:");
-        double precio = IO.readDouble(); // Asegúrate de manejar correctamente la entrada de números.
-        IO.println("Ingresado/Retirado por:");
-        String ingresadoRetiradoPor = IO.readString();
+        String nombreDisco = IO.leerEntradaValida("Ingrese el nombre del disco:");
+        String artista = IO.leerEntradaValida("Ingrese el artista:");
+        // Para el precio, sigue usando readDouble ya que leerEntradaValida es para entradas de texto
+        double precio = IO.leerPrecioValido("Ingrese el precio:");
+        String ingresadoRetiradoPor = IO.leerEntradaValida("Ingresado por:");
 
         Disco.DiscoBuilder builder = Disco.builder()
                 .nombreDisco(nombreDisco)
@@ -127,42 +187,70 @@ public class Main {
                 .precio(precio)
                 .ingresadoRetiradoPor(ingresadoRetiradoPor);
 
-        IO.println("¿Desea ingresar más información sobre el disco? (s/n):");
-        String respuesta = IO.readString().trim().toLowerCase();
-        
-        while ("s".equals(respuesta)) {
+        String respuesta="s";
+        do {
             mostrarMenuAtributosOpcionales();
             int opcion = IO.readInt();
             switch (opcion) {
                 case 1:
-                    IO.println("Ingrese el género:");
-                    builder.genero(IO.readString());
+                    builder.genero(IO.leerEntradaValida("Ingrese el género:"));
                     break;
                 case 2:
-                    IO.println("Ingrese la fecha de lanzamiento (formato YYYY-MM-DD):");
-                    try {
-                        builder.fechaLanzamiento(LocalDate.parse(IO.readString()));
-                    } catch (DateTimeParseException e) {
-                        IO.println("Formato de fecha no válido. Intenta nuevamente.");
-                    }
+                    builder.fechaLanzamiento(IO.leerEntradaValida("Ingrese la fecha de lanzamiento (formato YYYY-MM-DD):"));
                     break;
-                case 9:
-                    respuesta = "n"; // Terminar de añadir campos opcionales.
+                case 3:
+                    builder.formato(IO.leerEntradaValida("Ingrese el formato:"));
                     break;
+                case 4:
+                    builder.discografica(IO.leerEntradaValida("Ingrese la discográfica:"));
+                    break;
+                case 5:
+                    // Salir del bucle
+                    respuesta = "n";
+                    continue;
                 default:
                     IO.println("Opción no válida, intente de nuevo.");
+                    respuesta = "s"; // Asegúrate de pedir la entrada nuevamente si la opción no es válida
                     break;
             }
-            if (opcion != 9) { // Solo preguntar si no se ha decidido terminar.
-                IO.println("¿Desea añadir más información? (s/n):");
-                respuesta = IO.readString().trim().toLowerCase();
+
+            // Esta pregunta se hace después de procesar la opción, pero antes de continuar el bucle.
+            if (!"n".equals(respuesta)) {
+                respuesta = IO.leerEntradaValida("¿Desea añadir más información? (s/n):").toLowerCase();
             }
-        }
+
+        } while (!"n".equals(respuesta));
 
         Disco disco = builder.build();
         discoDAO.insertarDisco(disco);
         IO.println("Disco insertado con éxito.");
     }
+
+    
+    private static void borrarCampoOpcional(Disco disco, DiscoDAO discoDAO) {
+        IO.println("Seleccione el campo opcional que desea borrar:");
+        IO.println("1. Género");
+        IO.println("2. Fecha de Lanzamiento");
+        IO.println("3. Formato");
+        IO.println("4. Discográfica");
+        IO.println("5. Cancelar");
+        
+        int seleccion = IO.readInt();
+
+        String campoABorrar = null;
+        switch (seleccion) {
+            case 1: campoABorrar = "genero"; break;
+            case 2: campoABorrar = "fechaLanzamiento"; break;
+            case 3: campoABorrar = "formato"; break;
+            case 4: campoABorrar = "discografica"; break;
+            case 5: return; // Cancelar operación
+            default: IO.println("Selección no válida."); return;
+        }
+
+        discoDAO.borrarCampoOpcional(disco.getId(), campoABorrar);
+        IO.println("Campo borrado exitosamente.");
+    }
+
     
     private static void editarDisco(DiscoDAO discoDAO, Disco disco) {
         boolean seguirEditando = true;
@@ -171,39 +259,41 @@ public class Main {
             IO.println("1. Nombre del Disco");
             IO.println("2. Artista");
             IO.println("3. Precio");
-            IO.println("4. Ingresado/Retirado por");
+            IO.println("4. Ingresado por");
             IO.println("5. Género");
             IO.println("6. Fecha de Lanzamiento");
-            // Agrega más campos opcionales según tu modelo Disco
-            IO.println("7. Finalizar Edición");
-            
+            IO.println("7. Formato");
+            IO.println("8. Discográfica");
+            IO.println("9. Finalizar Edición");
+
             int opcion = IO.readInt();
             switch (opcion) {
                 case 1:
-                    IO.println("Ingrese el nuevo nombre del disco:");
-                    disco.setNombreDisco(IO.readString());
+                    disco.setNombreDisco(IO.leerEntradaValida("Ingrese el nuevo nombre del disco:"));
                     break;
                 case 2:
-                    IO.println("Ingrese el nuevo artista:");
-                    disco.setArtista(IO.readString());
+                    disco.setArtista(IO.leerEntradaValida("Ingrese el nuevo artista:"));
                     break;
                 case 3:
-                    IO.println("Ingrese el nuevo precio:");
-                    disco.setPrecio(IO.readDouble());
+                	double precio = IO.leerPrecioValido("Ingrese el nuevo precio:");
+                    disco.setPrecio(precio);
                     break;
                 case 4:
-                    IO.println("Ingresado/Retirado por:");
-                    disco.setIngresadoRetiradoPor(IO.readString());
+                    disco.setIngresadoRetiradoPor(IO.leerEntradaValida("Ingresado por:"));
                     break;
                 case 5:
-                    IO.println("Ingrese el nuevo género:");
-                    disco.setGenero(IO.readString());
+                    disco.setGenero(IO.leerEntradaValida("Ingrese el nuevo género:"));
                     break;
                 case 6:
-                    IO.println("Ingrese la nueva fecha de lanzamiento (formato YYYY-MM-DD):");
-                    disco.setFechaLanzamiento(LocalDate.parse(IO.readString()));
+                    disco.setFechaLanzamiento(IO.leerEntradaValida("Ingrese la nueva fecha de lanzamiento (formato YYYY-MM-DD):"));
                     break;
                 case 7:
+                    disco.setFormato(IO.leerEntradaValida("Ingrese el nuevo formato:"));
+                    break;
+                case 8:
+                    disco.setDiscografica(IO.leerEntradaValida("Ingrese la nueva discográfica:"));
+                    break;
+                case 9:
                     seguirEditando = false;
                     break;
                 default:
@@ -212,8 +302,11 @@ public class Main {
             }
         }
         discoDAO.actualizarDisco(disco);
+        Disco discoActualizado = discoDAO.obtenerDiscoPorId(disco.getId());
+        mostrarDetallesDisco(discoActualizado); // Mostrar los detalles actualizados
         IO.println("Disco actualizado con éxito.");
     }
+
 
 
 
@@ -221,9 +314,133 @@ public class Main {
     private static void mostrarMenuAtributosOpcionales() {
         IO.println("Seleccione el atributo que desea añadir:");
         IO.println("1. Género");
-        IO.println("2. Fecha de Lanzamiento");
-        // Lista otros atributos opcionales aquí
-        IO.println("9. Finalizar y guardar");
+        IO.println("2. Fecha de Lanzamiento (formato YYYY-MM-DD)");
+        IO.println("3. Formato");
+        IO.println("4. Discográfica");
+        IO.println("5. Finalizar y guardar");
     }
+    
+    //Metodos correspondientes a la búsqueda con filtros
+    
+    private static void mostrarMenuBusqueda(DiscoDAO discoDAO) {
+        Map<Integer, String> opcionesFiltro = new HashMap<>();
+        opcionesFiltro.put(1, "Nombre del Disco");
+        opcionesFiltro.put(2, "Artista");
+        opcionesFiltro.put(3, "Precio");
+        opcionesFiltro.put(4, "Ingresado por");
+        opcionesFiltro.put(5, "Género");
+        opcionesFiltro.put(6, "Fecha de Lanzamiento");
+        opcionesFiltro.put(7, "Formato");
+        opcionesFiltro.put(8, "Discográfica");
+        opcionesFiltro.put(9, "Finalizar y comenzar búsqueda");
+
+        Map<String, String> filtrosAplicados = new HashMap<>();
+        
+        boolean seguirFiltrando = true;
+        while (seguirFiltrando) {
+            IO.println("¿Qué filtro deseas aplicar para la búsqueda?");
+            opcionesFiltro.forEach((k, v) -> IO.println(k + ". " + v));
+            int opcion = IO.readInt();
+            
+            if (opcion == 9) {
+                seguirFiltrando = false;
+                continue;
+            }
+
+            String campoSeleccionado = opcionesFiltro.getOrDefault(opcion, "");
+            if (!campoSeleccionado.isEmpty() && !campoSeleccionado.equals("Finalizar y comenzar búsqueda")) {
+                String valorFiltro = IO.leerEntradaValida("Ingrese el valor para " + campoSeleccionado + ":");
+                filtrosAplicados.put(campoSeleccionado.toLowerCase().replaceAll(" ", "_"), valorFiltro);
+            } else {
+                IO.println("Opción no válida, intente de nuevo.");
+            }
+        }
+
+        if (!filtrosAplicados.isEmpty()) {
+            buscarYMostrarResultados(discoDAO, filtrosAplicados);
+        } else {
+            IO.println("No se aplicaron filtros. Volviendo al menú principal.");
+        }
+    }
+    
+    private static void buscarYMostrarResultados(DiscoDAO discoDAO, Map<String, String> filtros) {
+        List<Disco> resultados = discoDAO.buscarDiscosConFiltros(filtros);
+        if (resultados.isEmpty()) {
+            IO.println("No se encontraron discos con los filtros aplicados.");
+        } else {
+            IO.println("Resultados de la búsqueda:");
+            for (int i = 0; i < resultados.size(); i++) {
+                Disco disco = resultados.get(i);
+                IO.println((i + 1) + ". " + obtenerDetallesDiscoEnLinea(disco));
+            }
+            seleccionarYMostrarMenuDisco(resultados, discoDAO);
+        }
+    }
+
+    
+    private static void mostrarDetallesDisco2(Disco disco) {
+        StringBuilder detalles = new StringBuilder();
+        detalles.append("Nombre del Disco: ").append(disco.getNombreDisco());
+        detalles.append(", Artista: ").append(disco.getArtista());
+        detalles.append(", Precio: ").append(disco.getPrecio());
+        detalles.append(", Ingresado/Retirado por: ").append(disco.getIngresadoRetiradoPor());
+
+        // Añade los campos opcionales solo si están presentes
+        if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
+            detalles.append(", Género: ").append(disco.getGenero());
+        }
+        if (disco.getFechaLanzamiento() != null) {
+            detalles.append(", Fecha de Lanzamiento: ").append(disco.getFechaLanzamiento());
+        }
+        if (disco.getFormato() != null && !disco.getFormato().isEmpty()) {
+            detalles.append(", Formato: ").append(disco.getFormato());
+        }
+        if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
+            detalles.append(", Discográfica: ").append(disco.getDiscografica());
+        }
+        
+        // Finalmente, imprime la cadena completa de detalles
+        IO.println(detalles.toString());
+    }
+    
+    private static void seleccionarYMostrarMenuDisco(List<Disco> discos, DiscoDAO discoDAO) {
+        IO.println("Seleccione el número del disco para ver más opciones o 0 para volver:");
+        int seleccion = IO.readInt() - 1;
+        
+        if (seleccion >= 0 && seleccion < discos.size()) {
+            Disco discoSeleccionado = discos.get(seleccion);
+            mostrarMenuDisco(discoSeleccionado, discoDAO);
+        } else if (seleccion != -1) {
+            IO.println("Selección no válida.");
+        }
+    }
+    
+    private static String obtenerDetallesDiscoEnLinea(Disco disco) {
+        StringBuilder detalles = new StringBuilder();
+        detalles.append("Nombre del Disco: ").append(disco.getNombreDisco());
+        detalles.append(", Artista: ").append(disco.getArtista());
+        detalles.append(", Precio: ").append(disco.getPrecio());
+        detalles.append(", Ingresado/Retirado por: ").append(disco.getIngresadoRetiradoPor());
+
+        // Añade los campos opcionales solo si están presentes
+        if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
+            detalles.append(", Género: ").append(disco.getGenero());
+        }
+        if (disco.getFechaLanzamiento() != null) {
+            detalles.append(", Fecha de Lanzamiento: ").append(disco.getFechaLanzamiento());
+        }
+        if (disco.getFormato() != null && !disco.getFormato().isEmpty()) {
+            detalles.append(", Formato: ").append(disco.getFormato());
+        }
+        if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
+            detalles.append(", Discográfica: ").append(disco.getDiscografica());
+        }
+
+        return detalles.toString();
+    }
+
+
+
+
 
 }

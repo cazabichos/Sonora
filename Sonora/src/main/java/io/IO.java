@@ -95,6 +95,38 @@ public class IO {
 			}
 		}
 	}
+	
+	 public static String leerEntradaValida(String mensaje) {
+	        String entrada;
+	        do {
+	            IO.println(mensaje); // Usa IO.println para mantener la consistencia con el resto de tu clase
+	            entrada = sc.nextLine().trim(); // Elimina espacios al principio y al final
+	            if (entrada.isEmpty()) {
+	                IO.println("La entrada no puede estar vacía ni consistir solo de espacios en blanco. Por favor, intente de nuevo.");
+	            }
+	        } while (entrada.isEmpty());
+	        return entrada;
+	    }
+	 
+	 public static double leerPrecioValido(String mensaje) {
+	        double valor = 0;
+	        boolean entradaValida = false;
+	        do {
+	            System.out.println(mensaje); // Usa System.out.println directamente o adapta según cómo esté estructurada tu clase IO.
+	            String entrada = sc.nextLine().trim(); // Elimina espacios al principio y al final
+	            if (entrada.isEmpty()) {
+	                System.out.println("La entrada no puede estar vacía ni consistir solo de espacios en blanco. Por favor, intente de nuevo.");
+	            } else {
+	                try {
+	                    valor = Double.parseDouble(entrada);
+	                    entradaValida = true; // Si llegamos aquí, la entrada es válida
+	                } catch (NumberFormatException e) {
+	                    System.out.println("Entrada no válida. Por favor, ingrese un número válido.");
+	                }
+	            }
+	        } while (!entradaValida);
+	        return valor;
+	    }
 
 	/**
 	 * Lee un valor de tipo int
