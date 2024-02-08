@@ -336,6 +336,17 @@ public class Main {
 
         Map<String, String> filtrosAplicados = new HashMap<>();
         
+        // Mapeo de nombres de filtros a nombres de campos de MongoDB
+        Map<String, String> nombreCampoMongoDB = new HashMap<>();
+        nombreCampoMongoDB.put("Nombre del Disco", "nombreDisco");
+        nombreCampoMongoDB.put("Artista", "artista");
+        nombreCampoMongoDB.put("Precio", "precio");
+        nombreCampoMongoDB.put("Ingresado por", "ingresadoRetiradoPor");
+        nombreCampoMongoDB.put("Género", "genero");
+        nombreCampoMongoDB.put("Fecha de Lanzamiento", "fechaLanzamiento");
+        nombreCampoMongoDB.put("Formato", "formato");
+        nombreCampoMongoDB.put("Discográfica", "discografica");
+
         boolean seguirFiltrando = true;
         while (seguirFiltrando) {
             IO.println("¿Qué filtro deseas aplicar para la búsqueda?");
@@ -347,10 +358,14 @@ public class Main {
                 continue;
             }
 
-            String campoSeleccionado = opcionesFiltro.getOrDefault(opcion, "");
-            if (!campoSeleccionado.isEmpty() && !campoSeleccionado.equals("Finalizar y comenzar búsqueda")) {
+            String campoSeleccionado = opcionesFiltro.get(opcion);
+            if (campoSeleccionado != null && !campoSeleccionado.equals("Finalizar y comenzar búsqueda")) {
                 String valorFiltro = IO.leerEntradaValida("Ingrese el valor para " + campoSeleccionado + ":");
-                filtrosAplicados.put(campoSeleccionado.toLowerCase().replaceAll(" ", "_"), valorFiltro);
+                // Utiliza el mapeo para obtener el nombre del campo en MongoDB
+                String campoMongoDB = nombreCampoMongoDB.get(campoSeleccionado);
+                if (campoMongoDB != null) {
+                    filtrosAplicados.put(campoMongoDB, valorFiltro);
+                }
             } else {
                 IO.println("Opción no válida, intente de nuevo.");
             }
@@ -362,6 +377,7 @@ public class Main {
             IO.println("No se aplicaron filtros. Volviendo al menú principal.");
         }
     }
+
     
     private static void buscarYMostrarResultados(DiscoDAO discoDAO, Map<String, String> filtros) {
         List<Disco> resultados = discoDAO.buscarDiscosConFiltros(filtros);
@@ -439,6 +455,8 @@ public class Main {
         return detalles.toString();
     }
 
+    
+    
 
 
 

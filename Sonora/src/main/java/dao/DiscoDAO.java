@@ -1,5 +1,6 @@
 package dao;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -162,27 +163,27 @@ public class DiscoDAO {
         List<Disco> discos = new ArrayList<>();
         List<Bson> condiciones = new ArrayList<>();
 
-        for (Map.Entry<String, String> filtro : filtros.entrySet()) {
-            String key = filtro.getKey();
-            String value = filtro.getValue();
-
-            if ("precio".equals(key)) {
+        filtros.forEach((campo, valor) -> {
+            if (campo.equals("precio")) {
                 try {
-                    double precio = Double.parseDouble(value);
-                    condiciones.add(Filters.eq(key, precio));
+                    double precioVal = Double.parseDouble(valor);
+                    condiciones.add(Filters.eq(campo, precioVal));
                 } catch (NumberFormatException e) {
-                    System.out.println("Error en el formato del precio: " + value);
+                    IO.println("Error al interpretar el precio. Asegúrate de que es un número válido.");
                 }
             } else {
-                condiciones.add(Filters.regex(key, Pattern.quote(value), "i"));
+                // Para campos de texto, asegúrate de usar el regex adecuadamente.
+                condiciones.add(Filters.regex(campo, ".*" + Pattern.quote(valor) + ".*", "i"));
             }
-        }
+        });
 
-        Bson consultaFinal = condiciones.isEmpty() ? new Document() : Filters.and(condiciones);
-
-        MongoCollection<Document> collection = database.getCollection("discos");
-        for (Document doc : collection.find(consultaFinal)) {
-            discos.add(documentADisco(doc)); // Asegúrate de tener este método implementado correctamente
+        if (!condiciones.isEmpty()) {
+        	
+            MongoCollection<Document> collection = database.getCollection("discos");
+            FindIterable<Document> resultDocs = collection.find(Filters.and(condiciones));
+            for (Document doc : resultDocs) {
+                discos.add(documentADisco(doc));
+            }
         }
 
         return discos;
@@ -190,7 +191,7 @@ public class DiscoDAO {
 
 
 
-    
+
 
     // Implementa aquí otros métodos CRUD
 }
