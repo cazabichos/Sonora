@@ -164,30 +164,46 @@ public class DiscoDAO {
         List<Bson> condiciones = new ArrayList<>();
 
         filtros.forEach((campo, valor) -> {
-            if (campo.equals("precio")) {
+            if ("precio".equals(campo)) {
                 try {
                     double precioVal = Double.parseDouble(valor);
                     condiciones.add(Filters.eq(campo, precioVal));
                 } catch (NumberFormatException e) {
-                    IO.println("Error al interpretar el precio. Asegúrate de que es un número válido.");
+                    IO.println("Error al convertir el precio: " + valor);
+                }
+            } else if (campo.startsWith("precio>")) {
+                try {
+                    double precioVal = Double.parseDouble(valor);
+                    condiciones.add(Filters.gt("precio", precioVal));
+                } catch (NumberFormatException e) {
+                    IO.println("Error al interpretar el precio para el filtro >: " + valor);
+                }
+            } else if (campo.startsWith("precio<")) {
+                try {
+                    double precioVal = Double.parseDouble(valor);
+                    condiciones.add(Filters.lt("precio", precioVal));
+                } catch (NumberFormatException e) {
+                    IO.println("Error al interpretar el precio para el filtro <: " + valor);
                 }
             } else {
-                // Para campos de texto, asegúrate de usar el regex adecuadamente.
                 condiciones.add(Filters.regex(campo, ".*" + Pattern.quote(valor) + ".*", "i"));
             }
         });
 
         if (!condiciones.isEmpty()) {
-        	
             MongoCollection<Document> collection = database.getCollection("discos");
-            FindIterable<Document> resultDocs = collection.find(Filters.and(condiciones));
-            for (Document doc : resultDocs) {
+            for (Document doc : collection.find(Filters.and(condiciones))) {
                 discos.add(documentADisco(doc));
             }
         }
 
         return discos;
     }
+
+
+
+
+
 
 
 

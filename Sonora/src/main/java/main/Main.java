@@ -335,8 +335,6 @@ public class Main {
         opcionesFiltro.put(9, "Finalizar y comenzar búsqueda");
 
         Map<String, String> filtrosAplicados = new HashMap<>();
-        
-        // Mapeo de nombres de filtros a nombres de campos de MongoDB
         Map<String, String> nombreCampoMongoDB = new HashMap<>();
         nombreCampoMongoDB.put("Nombre del Disco", "nombreDisco");
         nombreCampoMongoDB.put("Artista", "artista");
@@ -352,7 +350,7 @@ public class Main {
             IO.println("¿Qué filtro deseas aplicar para la búsqueda?");
             opcionesFiltro.forEach((k, v) -> IO.println(k + ". " + v));
             int opcion = IO.readInt();
-            
+
             if (opcion == 9) {
                 seguirFiltrando = false;
                 continue;
@@ -360,11 +358,24 @@ public class Main {
 
             String campoSeleccionado = opcionesFiltro.get(opcion);
             if (campoSeleccionado != null && !campoSeleccionado.equals("Finalizar y comenzar búsqueda")) {
-                String valorFiltro = IO.leerEntradaValida("Ingrese el valor para " + campoSeleccionado + ":");
-                // Utiliza el mapeo para obtener el nombre del campo en MongoDB
-                String campoMongoDB = nombreCampoMongoDB.get(campoSeleccionado);
-                if (campoMongoDB != null) {
-                    filtrosAplicados.put(campoMongoDB, valorFiltro);
+                if (opcion == 3) { // Opción para "Precio"
+                    String instrucciones = "Ingrese el valor para Precio (use < o > para rangos): ";
+                    String entradaPrecio = IO.leerEntradaValida(instrucciones); // Usar leerEntradaValida para manejar la entrada
+
+                    // Determinar si el valorFiltro comienza con < o > para rangos
+                    if (entradaPrecio.startsWith("<") || entradaPrecio.startsWith(">")) {
+                        // Agrega el filtro con el operador adecuado
+                        filtrosAplicados.put("precio" + entradaPrecio.substring(0, 1), entradaPrecio.substring(1));
+                    } else {
+                        // Trata el valor como un precio exacto
+                        filtrosAplicados.put("precio", entradaPrecio);
+                    }
+                } else {
+                    String valorFiltro = IO.leerEntradaValida("Ingrese el valor para " + campoSeleccionado + ":");
+                    String campoMongoDB = nombreCampoMongoDB.get(campoSeleccionado);
+                    if (campoMongoDB != null) {
+                        filtrosAplicados.put(campoMongoDB, valorFiltro);
+                    }
                 }
             } else {
                 IO.println("Opción no válida, intente de nuevo.");
@@ -377,6 +388,10 @@ public class Main {
             IO.println("No se aplicaron filtros. Volviendo al menú principal.");
         }
     }
+
+
+
+
 
     
     private static void buscarYMostrarResultados(DiscoDAO discoDAO, Map<String, String> filtros) {
@@ -394,30 +409,7 @@ public class Main {
     }
 
     
-    private static void mostrarDetallesDisco2(Disco disco) {
-        StringBuilder detalles = new StringBuilder();
-        detalles.append("Nombre del Disco: ").append(disco.getNombreDisco());
-        detalles.append(", Artista: ").append(disco.getArtista());
-        detalles.append(", Precio: ").append(disco.getPrecio());
-        detalles.append(", Ingresado/Retirado por: ").append(disco.getIngresadoRetiradoPor());
-
-        // Añade los campos opcionales solo si están presentes
-        if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
-            detalles.append(", Género: ").append(disco.getGenero());
-        }
-        if (disco.getFechaLanzamiento() != null) {
-            detalles.append(", Fecha de Lanzamiento: ").append(disco.getFechaLanzamiento());
-        }
-        if (disco.getFormato() != null && !disco.getFormato().isEmpty()) {
-            detalles.append(", Formato: ").append(disco.getFormato());
-        }
-        if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
-            detalles.append(", Discográfica: ").append(disco.getDiscografica());
-        }
-        
-        // Finalmente, imprime la cadena completa de detalles
-        IO.println(detalles.toString());
-    }
+    
     
     private static void seleccionarYMostrarMenuDisco(List<Disco> discos, DiscoDAO discoDAO) {
         IO.println("Seleccione el número del disco para ver más opciones o 0 para volver:");
