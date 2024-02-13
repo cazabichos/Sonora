@@ -6,8 +6,8 @@ import lombok.Data;
 
 
 
-@Data // Genera getters, setters, toString, equals y hashCode
-@Builder // Genera un constructor builder para la creación de instancias
+@Data 
+@Builder 
 public class Disco {
 	private String id;
     private String nombreDisco; // Obligatorio

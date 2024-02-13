@@ -37,7 +37,7 @@ public class Main {
                     // Lógica para buscar discos con filtros
                     mostrarMenuBusqueda(discoDAO);
                     break;
-                case 4: // Asumiendo que 3 es la opción para salir
+                case 4: 
                     IO.println("Programa finalizado con éxito, conexión a MongoDB cerrada.");
                     MongoDBUtil.close(); // Cierra la conexión a la base de datos antes de salir
                     return;
@@ -70,7 +70,7 @@ public class Main {
         }
     }
 
-    
+    //Método de optención de campos en el caso de que existan en la base de datos
     private static String obtenerCamposOpcionales(Disco disco) {
         StringBuilder campos = new StringBuilder();
         if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
@@ -86,7 +86,7 @@ public class Main {
             campos.append("Discográfica: ").append(disco.getDiscografica()).append(", ");
         }
 
-        // Elimina la última coma y espacio si hay campos
+        
         if (campos.length() > 0) {
             campos.setLength(campos.length() - 2);
         }
@@ -99,17 +99,17 @@ public class Main {
         IO.println("Seleccione el número del disco para más opciones o 0 para volver:");
         int seleccion = IO.readInt();
         
-        if (seleccion == 0) return; // Volver al menú principal si el usuario ingresa 0
+        if (seleccion == 0) return; 
         
         List<Disco> discos = discoDAO.obtenerTodosLosDiscos();
         if (seleccion > 0 && seleccion <= discos.size()) {
             Disco discoSeleccionado = discos.get(seleccion - 1);
-            mostrarMenuDisco(discoSeleccionado, discoDAO); // Ajustado para pasar discoDAO también
+            mostrarMenuDisco(discoSeleccionado, discoDAO); 
         } else {
             IO.println("Selección inválida.");
         }
     }
-    
+    //Muestra los detalles de un disco al ser seleccionado
     private static void mostrarDetallesDisco(Disco disco) {
         IO.println("Detalles Actualizados del Disco:");
         IO.println("Nombre del Disco: " + disco.getNombreDisco());
@@ -130,12 +130,10 @@ public class Main {
         if (disco.getDiscografica() != null && !disco.getDiscografica().isEmpty()) {
             IO.println("Discográfica: " + disco.getDiscografica());
         }
-        // Agrega aquí más campos opcionales según cómo hayas definido tu clase Disco
+        
     }
 
-
-
-
+  //Mostrar el menú de un disco al seleccionarlo
     private static void mostrarMenuDisco(Disco disco, DiscoDAO discoDAO) {
     	IO.println("Has seleccionado: " + disco.getNombreDisco());
         IO.println("1. Editar disco");
@@ -148,9 +146,7 @@ public class Main {
         switch (opcion) {
             case 1:
                 editarDisco(discoDAO, disco);
-                // Recuperar la versión actualizada del disco de la base de datos
-                
-                // Asumiendo que tienes un método para mostrar los detalles del disco
+             
                 
                 break;
             case 2:
@@ -162,8 +158,7 @@ public class Main {
             	 borrarCampoOpcional(disco, discoDAO);
                  break;
             case 4:
-                // No se necesita hacer nada aquí para volver al menú principal
-                // La función terminará, y el bucle while en main se reanudará mostrando el menú principal nuevamente
+               
                 return;
             default:
                 IO.println("Opción no válida, intente de nuevo.");
@@ -172,12 +167,10 @@ public class Main {
     }
 
 
-
-
     private static void insertarDisco(DiscoDAO discoDAO) {
         String nombreDisco = IO.leerEntradaValida("Ingrese el nombre del disco:");
         String artista = IO.leerEntradaValida("Ingrese el artista:");
-        // Para el precio, sigue usando readDouble ya que leerEntradaValida es para entradas de texto
+        
         double precio = IO.leerPrecioValido("Ingrese el precio:");
         String ingresadoRetiradoPor = IO.leerEntradaValida("Ingresado por:");
 
@@ -205,16 +198,15 @@ public class Main {
                     builder.discografica(IO.leerEntradaValida("Ingrese la discográfica:"));
                     break;
                 case 5:
-                    // Salir del bucle
+                   
                     respuesta = "n";
                     continue;
                 default:
                     IO.println("Opción no válida, intente de nuevo.");
-                    respuesta = "s"; // Asegúrate de pedir la entrada nuevamente si la opción no es válida
+                    respuesta = "s";
                     break;
             }
 
-            // Esta pregunta se hace después de procesar la opción, pero antes de continuar el bucle.
             if (!"n".equals(respuesta)) {
                 respuesta = IO.leerEntradaValida("¿Desea añadir más información? (s/n):").toLowerCase();
             }
@@ -308,9 +300,6 @@ public class Main {
     }
 
 
-
-
-    
     private static void mostrarMenuAtributosOpcionales() {
         IO.println("Seleccione el atributo que desea añadir:");
         IO.println("1. Género");
@@ -362,12 +351,12 @@ public class Main {
                     String instrucciones = "Ingrese el valor para Precio (use < o > para rangos): ";
                     String entradaPrecio = IO.leerEntradaValida(instrucciones); // Usar leerEntradaValida para manejar la entrada
 
-                    // Determinar si el valorFiltro comienza con < o > para rangos
+                    
                     if (entradaPrecio.startsWith("<") || entradaPrecio.startsWith(">")) {
                         // Agrega el filtro con el operador adecuado
                         filtrosAplicados.put("precio" + entradaPrecio.substring(0, 1), entradaPrecio.substring(1));
                     } else {
-                        // Trata el valor como un precio exacto
+                       
                         filtrosAplicados.put("precio", entradaPrecio);
                     }
                 } else {
@@ -389,10 +378,6 @@ public class Main {
         }
     }
 
-
-
-
-
     
     private static void buscarYMostrarResultados(DiscoDAO discoDAO, Map<String, String> filtros) {
         List<Disco> resultados = discoDAO.buscarDiscosConFiltros(filtros);
@@ -408,8 +393,6 @@ public class Main {
         }
     }
 
-    
-    
     
     private static void seleccionarYMostrarMenuDisco(List<Disco> discos, DiscoDAO discoDAO) {
         IO.println("Seleccione el número del disco para ver más opciones o 0 para volver:");
@@ -430,7 +413,7 @@ public class Main {
         detalles.append(", Precio: ").append(disco.getPrecio());
         detalles.append(", Ingresado/Retirado por: ").append(disco.getIngresadoRetiradoPor());
 
-        // Añade los campos opcionales solo si están presentes
+      
         if (disco.getGenero() != null && !disco.getGenero().isEmpty()) {
             detalles.append(", Género: ").append(disco.getGenero());
         }
@@ -446,10 +429,6 @@ public class Main {
 
         return detalles.toString();
     }
-
-    
-    
-
 
 
 

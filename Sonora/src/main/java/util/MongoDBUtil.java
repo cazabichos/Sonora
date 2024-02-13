@@ -23,7 +23,7 @@ public class MongoDBUtil {
     public static void close() {
         if (mongoClient != null) {
             mongoClient.close();
-            mongoClient = null; // Asegurar que el cliente se marque como cerrado
+            mongoClient = null; 
         }
     }
 }
